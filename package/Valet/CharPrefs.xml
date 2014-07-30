@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?> 
+
+<Root>
+  <Value name="Valet" value="true"/>
+  <Archive name="Valet_data"/>
+</Root>

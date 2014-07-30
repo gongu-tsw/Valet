@@ -207,6 +207,17 @@ class com.thesecretworld.chronicle.Gongju.ClothingDeckManagerImpl {
 		}
 		
 		if (!found) {
+			var languageCode:String = com.Utils.LDBFormat.GetCurrentLanguageCode();
+			if (languageCode == "fr") {
+				Chat.SignalShowFIFOMessage.Emit("Valet: Erreur: La tenue " + name + " est introuvable.", 0);
+				com.GameInterface.Utils.PrintChatText("Valet: Erreur: La tenue " + name + " est introuvable.");
+			} else if (languageCode == "de") {
+				Chat.SignalShowFIFOMessage.Emit("Valet: Fehler: " + name + " nicht gefunden.", 0);
+				com.GameInterface.Utils.PrintChatText("Valet: Fehler: " + name + " nicht gefunden.");
+			} else { // default english
+				Chat.SignalShowFIFOMessage.Emit("Valet: Error: The outfit " + name + " was not found.", 0);
+				com.GameInterface.Utils.PrintChatText("Valet: Error: The outfit " + name + " was not found");
+			}
 			return "Error name does not exist";
 		}
 		

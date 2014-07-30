@@ -34,7 +34,7 @@ var m_ValetOutfitChangeMonitor:DistributedValue;
 
 // for Integration in 'Topbar Information Overload' by Viper
 var m_VTIOIsLoadedMonitor:DistributedValue;
-var VTIOAddonInfo:String = "Valet|Gongju|0.4|Valet_OptionWindowOpen|_root.valet_valet.m_Icon"; 
+var VTIOAddonInfo:String = "Valet|Gongju|0.4.1|Valet_OptionWindowOpen|_root.valet_valet.m_Icon"; 
 var m_OptionWindowState:DistributedValue;
 
 function SlotCheckVTIOIsLoaded() {
@@ -58,7 +58,7 @@ function onLoad() {
 	DistributedValue.SetDValue("Valet_OptionWindowOpen", false);
 	
 	m_ValetOutfitChangeMonitor = DistributedValue.Create("Valet_SelectOutfit");
-	m_ValetOutfitChangeMonitor.SignalChanged.Connect("ChangeOutfit", this);
+	m_ValetOutfitChangeMonitor.SignalChanged.Connect(ChangeOutfit, this);
 	
 	InitIcon();
 	

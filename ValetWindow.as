@@ -34,6 +34,7 @@ class ValetWindow extends MovieClip {
 	private static var ACTION_RENAME:Number = 2;
 	private static var ACTION_DELETE:Number = 3;
 	private static var ACTION_LOAD:Number = 4;
+	private static var ACTION_COPY:Number = 5;
 	
 	private static var ANIMATION_DURATION:Number = 0.2;
 	
@@ -62,6 +63,7 @@ class ValetWindow extends MovieClip {
 	private var m_RenameButton:Button;
 	private var m_CloseButton:Button;
 	private var m_EquipButton:Button;
+	private var m_CopyButton:Button;
 	
 	private var m_MoveTopButton:Button;
 	private var m_MoveUpButton:Button;
@@ -81,6 +83,7 @@ class ValetWindow extends MovieClip {
 	
 	private var m_ItemList:ScrollingList;
 	private var m_Action:Number;
+	private var m_InspectionCharacter:Character;
 	
 	public function setClothingDeckManagerImpl(cdmi:ClothingDeckManagerImpl) {
 		m_ClothingDeckManagerImpl = cdmi;
@@ -129,6 +132,9 @@ class ValetWindow extends MovieClip {
 		m_OverwriteButton.addEventListener("focusIn", this, "RemoveFocus");
 		m_OverwriteButton.label = LDBFormat.LDBGetText("CharStatSkillGUI", "OverwriteBuild");
 		m_OverwriteButton.disabled = true;
+		
+		m_CopyButton.addEventListener("click", this, "CopyClothingSet");
+		m_CopyButton.addEventListener("focusIn", this, "RemoveFocus");
 		
 		m_MoveTopButton.addEventListener("focusIn", this, "RemoveFocus");
 		m_MoveUpButton.addEventListener("focusIn", this, "RemoveFocus");
@@ -407,6 +413,12 @@ class ValetWindow extends MovieClip {
 			m_ClothingDeckManagerImpl.deleteClothingSet(deleteName);
 			InitList();
         }
+		else if (m_Action == ACTION_COPY)
+		{
+			var newName:String = String(m_ValidatorText.text);
+			m_ClothingDeckManagerImpl.copyClothingSet(newName);
+			InitList();
+		}
         
         NegativeButtonClickHandler();
     }
@@ -419,6 +431,24 @@ class ValetWindow extends MovieClip {
 	
 	public function AddClothingSet(event:Object) {
 		m_Action = ACTION_CREATE;
+		ShowConfirmationPanel();
+		
+		m_ConfirmPanel.m_Headline.htmlText = createHeadline; //LDBFormat.LDBGetText("CharStatSkillGUI", "SaveBuild");
+		m_ConfirmPanel.m_Body.htmlText = createText; //LDBFormat.LDBGetText("CharStatSkillGUI", "SaveBuildBody");
+			
+		m_ConfirmPanel.m_InputTextField._visible = true;
+        m_ConfirmPanel.m_InputTextField.m_NameText._visible = false;
+		m_ConfirmPanel.m_InputTextField.m_NameText._text = LDBFormat.LDBGetText("GenericGUI", "EnterName");
+			
+		m_PositiveLabel = LDBFormat.LDBGetText("GenericGUI", "Save");
+
+		m_UserInput = true;
+		SetConfirmationWindow();
+	}
+	
+	public function CopyClothingSet(event:Object) {
+		Chat.SignalShowFIFOMessage.Emit("DEBUG: Call CopyClothingSet", 0);
+		m_Action = ACTION_COPY;
 		ShowConfirmationPanel();
 		
 		m_ConfirmPanel.m_Headline.htmlText = createHeadline; //LDBFormat.LDBGetText("CharStatSkillGUI", "SaveBuild");

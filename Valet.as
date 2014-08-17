@@ -15,6 +15,7 @@ import com.thesecretworld.chronicle.Gongju.ClothingDeckManagerImpl;
 
 import com.Utils.Archive;
 import com.Utils.LDBFormat;
+import com.Utils.ID32;
 
 import flash.geom.Point;
 import gfx.controls.Button;
@@ -34,8 +35,12 @@ var m_ValetOutfitChangeMonitor:DistributedValue;
 
 // for Integration in 'Topbar Information Overload' by Viper
 var m_VTIOIsLoadedMonitor:DistributedValue;
-var VTIOAddonInfo:String = "Valet|Gongju|0.4.1|Valet_OptionWindowOpen|_root.valet_valet.m_Icon"; 
+var VTIOAddonInfo:String = "Valet|Gongju|0.4.2|Valet_OptionWindowOpen|_root.valet_valet.m_Icon"; 
 var m_OptionWindowState:DistributedValue;
+
+// to have current defensive target for outfit copy
+var clientChar:Character;
+var m_CurrentDefensiveTarget:ID32;
 
 function SlotCheckVTIOIsLoaded() {
 	if (DistributedValue.GetDValue("VTIO_IsLoaded")) {
@@ -60,6 +65,11 @@ function onLoad() {
 	m_ValetOutfitChangeMonitor = DistributedValue.Create("Valet_SelectOutfit");
 	m_ValetOutfitChangeMonitor.SignalChanged.Connect(ChangeOutfit, this);
 	
+	clientChar = Character.GetClientCharacter();
+	if (clientChar != undefined) {
+		clientChar.SignalDefensiveTargetChanged.Connect(SlotDefensiveTargetChanged, this);
+	}
+	
 	InitIcon();
 	
 	SlotCheckVTIOIsLoaded();
@@ -69,6 +79,22 @@ function ChangeOutfit() {
 	if (m_ClothingDeckManagerImpl) {
 		m_ClothingDeckManagerImpl.equipClothingSet(DistributedValue.GetDValue("Valet_SelectOutfit"));
 	}
+}
+
+function SlotDefensiveTargetChanged(targetID:ID32)
+{
+	if (IsValidTarget(targetID) || targetID == undefined)
+	{
+		m_CurrentDefensiveTarget = targetID;
+		if (m_ClothingDeckManagerImpl != undefined) {
+			m_ClothingDeckManagerImpl.setDefensiveTarget(m_CurrentDefensiveTarget);
+		}
+	}
+}
+
+function IsValidTarget(targetID:ID32)
+{
+	return targetID.GetType() == _global.Enums.TypeID.e_Type_GC_Character || targetID.GetType() == 0;
 }
 
 // Module (de)activation
@@ -106,6 +132,7 @@ function OnModuleActivated(config:Archive) {
 			m_ClothingDeckManagerImpl.addSerializedDeck(deckArchive);
 		}
 	}
+	m_ClothingDeckManagerImpl.setDefensiveTarget(m_CurrentDefensiveTarget);
 }
 
 function OnModuleDeactivated() {

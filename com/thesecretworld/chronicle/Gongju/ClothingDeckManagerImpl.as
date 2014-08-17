@@ -16,6 +16,7 @@ class com.thesecretworld.chronicle.Gongju.ClothingDeckManagerImpl {
 
 	private var m_WardrobeInventory:Inventory; // character wardrobe
 	private var m_EquippedInventory:Inventory; // character current clothes
+	private var m_CurrentDefensiveTarget:ID32;
 	private var m_WardrobeChanged:Boolean;
 	private var m_EquippedChanged:Boolean;
 	private var m_ClothingDeckArray:Array;
@@ -57,6 +58,23 @@ class com.thesecretworld.chronicle.Gongju.ClothingDeckManagerImpl {
 		addOrUpdateClothingSet(name, true);
     	
     	return undefined;
+	}
+	
+	public function copyClothingSet(name:String):String {
+		for (var idx:Number = 0; idx < m_ClothingDeckArray.length; ++idx) {
+			var deck:ClothingDeck = m_ClothingDeckArray[idx];
+			if (deck.getName() == name)
+				return "Error name already used";
+		}
+		
+		if (name.indexOf("|") != -1)
+			return "Error: | Not allowed in name";
+		
+		if (name == null || name == undefined || name.length == 0) {
+			return "Invalid name";
+		}
+		
+		addOrUpdateClothingSet(name, true, true);
 	}
 	
 	public function renameClothingSet(oldname:String, newname:String) {
@@ -111,8 +129,18 @@ class com.thesecretworld.chronicle.Gongju.ClothingDeckManagerImpl {
     	return undefined;
 	}
 	
-	private function addOrUpdateClothingSet(name:String, add:Boolean) {
-		updateInventories();
+	private function addOrUpdateClothingSet(name:String, add:Boolean, targetCharacter:Boolean) {
+		var currentInventory:Inventory;
+		if (targetCharacter === true) {
+			var characterID:ID32 = m_CurrentDefensiveTarget;
+			currentInventory = new Inventory(new com.Utils.ID32(_global.Enums.InvType.e_Type_GC_WearInventory, characterID.GetInstance()));
+		}
+		else
+		{
+			updateInventories();
+			currentInventory = m_EquippedInventory;
+		}
+		
 	
 		var headgear1:String = undefined;
     	var headgear2:String = undefined;
@@ -135,34 +163,34 @@ class com.thesecretworld.chronicle.Gongju.ClothingDeckManagerImpl {
 			
 			switch(idxNumber) {
 				case _global.Enums.ItemEquipLocation.e_Wear_Face:
-					headgear1 = m_EquippedInventory.GetItemAt(idxNumber).m_Name;
+					headgear1 = currentInventory.GetItemAt(idxNumber).m_Name;
 					break;
 				case _global.Enums.ItemEquipLocation.e_HeadAccessory:
-					headgear2 =m_EquippedInventory.GetItemAt(idxNumber).m_Name;
+					headgear2 = currentInventory.GetItemAt(idxNumber).m_Name;
 					break;
 				case _global.Enums.ItemEquipLocation.e_Wear_Hat:
-					hats = m_EquippedInventory.GetItemAt(idxNumber).m_Name;
+					hats = currentInventory.GetItemAt(idxNumber).m_Name;
 					break;
 				case _global.Enums.ItemEquipLocation.e_Wear_Neck:
-					neck = m_EquippedInventory.GetItemAt(idxNumber).m_Name;
+					neck = currentInventory.GetItemAt(idxNumber).m_Name;
 					break;
 				case _global.Enums.ItemEquipLocation.e_Wear_Chest:
-					chest =m_EquippedInventory.GetItemAt(idxNumber).m_Name;
+					chest = currentInventory.GetItemAt(idxNumber).m_Name;
 					break;
 				case _global.Enums.ItemEquipLocation.e_Wear_Back:
-					back = m_EquippedInventory.GetItemAt(idxNumber).m_Name;
+					back = currentInventory.GetItemAt(idxNumber).m_Name;
 					break;
 				case _global.Enums.ItemEquipLocation.e_Wear_Hands:
-					hands = m_EquippedInventory.GetItemAt(idxNumber).m_Name;
+					hands = currentInventory.GetItemAt(idxNumber).m_Name;
 					break;
 				case _global.Enums.ItemEquipLocation.e_Wear_Legs:
-					leg = m_EquippedInventory.GetItemAt(idxNumber).m_Name;
+					leg = currentInventory.GetItemAt(idxNumber).m_Name;
 					break;
 				case _global.Enums.ItemEquipLocation.e_Wear_Feet:
-					feet = m_EquippedInventory.GetItemAt(idxNumber).m_Name;
+					feet = currentInventory.GetItemAt(idxNumber).m_Name;
 					break;
 				case _global.Enums.ItemEquipLocation.e_Wear_FullOutfit:
-					multislot = m_EquippedInventory.GetItemAt(idxNumber).m_Name;
+					multislot = currentInventory.GetItemAt(idxNumber).m_Name;
 					break;
 			}
 		}
@@ -364,6 +392,10 @@ class com.thesecretworld.chronicle.Gongju.ClothingDeckManagerImpl {
 	}
 	
 	// Misc
+	public function setDefensiveTarget(newDefensiveTarget:ID32) {
+		m_CurrentDefensiveTarget = newDefensiveTarget;
+	}
+	
 	private function updateInventories() {
 		var clientCharacterID:ID32 = Character.GetClientCharID();
 		if (m_WardrobeChanged) {

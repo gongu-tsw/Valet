@@ -25,6 +25,7 @@ import ValetWindow;
 
 var m_WindowPosition:Point;
 var m_ButtonPosition:Point;
+var m_InspectTarget:Boolean;
 var m_ValetWindow:ValetWindow;
 var m_Icon:MovieClip;
 var m_ClothingDeckManagerImpl:ClothingDeckManagerImpl;
@@ -88,6 +89,11 @@ function SlotDefensiveTargetChanged(targetID:ID32)
 		m_CurrentDefensiveTarget = targetID;
 		if (m_ClothingDeckManagerImpl != undefined) {
 			m_ClothingDeckManagerImpl.setDefensiveTarget(m_CurrentDefensiveTarget);
+			
+		}
+		
+		if (m_ValetWindow != undefined && m_ValetWindow != null) {
+			m_ValetWindow.setDefensiveTarget(m_CurrentDefensiveTarget);
 		}
 	}
 }
@@ -114,13 +120,15 @@ function OnModuleActivated(config:Archive) {
 		m_ButtonPosition.y = 150;
 	}
 	
+	m_InspectTarget = config.FindEntry("InspectTarget");
+	if (m_InspectTarget == undefined) {
+		m_InspectTarget = true;
+	}
+	
 	if (DistributedValue.GetDValue("VTIO_IsLoaded") != true) {
 		m_Icon._x = m_ButtonPosition.x;
 		m_Icon._y = m_ButtonPosition.y;
 	}
-	
-	//m_ClothingDeckManagerImpl = undefined;
-	//deckList = undefined;
 	
 	m_ClothingDeckManagerImpl = new ClothingDeckManagerImpl();
 	var deckList:Array = config.FindEntryArray("AllDecks");
@@ -139,11 +147,11 @@ function OnModuleDeactivated() {
 	var archive:Archive = new Archive();
 	archive.AddEntry("ButtonPosition", m_ButtonPosition);
 	archive.AddEntry("WindowPosition", m_WindowPosition);
-
+	archive.AddEntry("InspectTarget", m_InspectTarget);
+	
 	var allDeckArchives:Array = m_ClothingDeckManagerImpl.serializeAllDeck()
 
 	m_ClothingDeckManagerImpl = undefined;
-	deckList = undefined;
 	
 	for (var idx:Number = 0; idx < allDeckArchives.length; ++idx) {
 		archive.AddEntry("AllDecks", allDeckArchives[idx]);

@@ -129,19 +129,8 @@ class com.thesecretworld.chronicle.Gongju.ClothingDeckManagerImpl {
     	return undefined;
 	}
 	
-	private function addOrUpdateClothingSet(name:String, add:Boolean, targetCharacter:Boolean) {
-		var currentInventory:Inventory;
-		if (targetCharacter === true) {
-			var characterID:ID32 = m_CurrentDefensiveTarget;
-			currentInventory = new Inventory(new com.Utils.ID32(_global.Enums.InvType.e_Type_GC_WearInventory, characterID.GetInstance()));
-		}
-		else
-		{
-			updateInventories();
-			currentInventory = m_EquippedInventory;
-		}
+	public function createClothingDeckFromTarget (inventory:Inventory, deck:ClothingDeck, deckName:String) : ClothingDeck {
 		
-	
 		var headgear1:String = undefined;
     	var headgear2:String = undefined;
     	var hats:String = undefined;
@@ -163,49 +152,69 @@ class com.thesecretworld.chronicle.Gongju.ClothingDeckManagerImpl {
 			
 			switch(idxNumber) {
 				case _global.Enums.ItemEquipLocation.e_Wear_Face:
-					headgear1 = currentInventory.GetItemAt(idxNumber).m_Name;
+					headgear1 = inventory.GetItemAt(idxNumber).m_Name;
 					break;
 				case _global.Enums.ItemEquipLocation.e_HeadAccessory:
-					headgear2 = currentInventory.GetItemAt(idxNumber).m_Name;
+					headgear2 = inventory.GetItemAt(idxNumber).m_Name;
 					break;
 				case _global.Enums.ItemEquipLocation.e_Wear_Hat:
-					hats = currentInventory.GetItemAt(idxNumber).m_Name;
+					hats = inventory.GetItemAt(idxNumber).m_Name;
 					break;
 				case _global.Enums.ItemEquipLocation.e_Wear_Neck:
-					neck = currentInventory.GetItemAt(idxNumber).m_Name;
+					neck = inventory.GetItemAt(idxNumber).m_Name;
 					break;
 				case _global.Enums.ItemEquipLocation.e_Wear_Chest:
-					chest = currentInventory.GetItemAt(idxNumber).m_Name;
+					chest = inventory.GetItemAt(idxNumber).m_Name;
 					break;
 				case _global.Enums.ItemEquipLocation.e_Wear_Back:
-					back = currentInventory.GetItemAt(idxNumber).m_Name;
+					back = inventory.GetItemAt(idxNumber).m_Name;
 					break;
 				case _global.Enums.ItemEquipLocation.e_Wear_Hands:
-					hands = currentInventory.GetItemAt(idxNumber).m_Name;
+					hands = inventory.GetItemAt(idxNumber).m_Name;
 					break;
 				case _global.Enums.ItemEquipLocation.e_Wear_Legs:
-					leg = currentInventory.GetItemAt(idxNumber).m_Name;
+					leg = inventory.GetItemAt(idxNumber).m_Name;
 					break;
 				case _global.Enums.ItemEquipLocation.e_Wear_Feet:
-					feet = currentInventory.GetItemAt(idxNumber).m_Name;
+					feet = inventory.GetItemAt(idxNumber).m_Name;
 					break;
 				case _global.Enums.ItemEquipLocation.e_Wear_FullOutfit:
-					multislot = currentInventory.GetItemAt(idxNumber).m_Name;
+					multislot = inventory.GetItemAt(idxNumber).m_Name;
 					break;
 			}
 		}
 		
-		if (add) {
-			// name unicity already checked
+		if (deck != null) {
+			deck.update(headgear1, headgear2, hats, neck, chest, back, hands, leg, feet, multislot);
+			return deck;
+		} else {
 			var charName = Character.GetClientCharacter().GetName();
-			var newClothingDeck:ClothingDeck = new ClothingDeck(charName, name, headgear1, headgear2, hats, neck, chest, back, hands, leg, feet, multislot);
+			var newClothingDeck:ClothingDeck = new ClothingDeck(charName, deckName, headgear1, headgear2, hats, neck, chest, back, hands, leg, feet, multislot);
+			return newClothingDeck
+		}
+	}
+	
+	private function addOrUpdateClothingSet(name:String, add:Boolean, targetCharacter:Boolean) {
+		var currentInventory:Inventory;
+		if (targetCharacter === true) {
+			var characterID:ID32 = m_CurrentDefensiveTarget;
+			currentInventory = new Inventory(new com.Utils.ID32(_global.Enums.InvType.e_Type_GC_WearInventory, characterID.GetInstance()));
+		}
+		else
+		{
+			updateInventories();
+			currentInventory = m_EquippedInventory;
+		}
+		
+		if (add) {
+			var newClothingDeck = createClothingDeckFromTarget(currentInventory, null, name);
     		m_ClothingDeckArray.push(newClothingDeck);
 		} else {
 			// name existence already checked
 			for (var idx:Number = 0; idx < m_ClothingDeckArray.length; ++idx) {
 				var deck:ClothingDeck = m_ClothingDeckArray[idx];
 				if (deck.getName() == name) {
-					deck.update(headgear1, headgear2, hats, neck, chest, back, hands, leg, feet, multislot);
+					createClothingDeckFromTarget(currentInventory, deck, name);
 					break;
 				}
 			}
@@ -218,6 +227,16 @@ class com.thesecretworld.chronicle.Gongju.ClothingDeckManagerImpl {
 			if (deck.getName() == name) {
 				m_ClothingDeckArray.splice(idx, 1);
 				break;
+			}
+		}
+		return undefined
+	}
+	
+	public function getDeck(name:String):ClothingDeck {
+		for (var idx:Number = 0; idx < m_ClothingDeckArray.length; ++idx) {
+			var deck:ClothingDeck = m_ClothingDeckArray[idx];
+			if (deck.getName() == name) {
+				return deck;
 			}
 		}
 		return undefined
@@ -379,6 +398,28 @@ class com.thesecretworld.chronicle.Gongju.ClothingDeckManagerImpl {
 		}
 	}
 	
+	public function getClothStatus(clothName:String) : Number {
+		var clientCharacterID:ID32 = Character.GetClientCharID();
+		var m_EquippedInventory = new Inventory( new com.Utils.ID32(_global.Enums.InvType.e_Type_GC_WearInventory, clientCharacterID.GetInstance()) );
+		
+		for ( var i:Number = 0 ; i < m_EquippedInventory.GetMaxItems() ; ++i ) {
+			var invItem:InventoryItem = m_EquippedInventory.GetItemAt(i);
+			if ( invItem.m_Name == clothName) {
+				return 2;
+			}
+		}
+		
+		var m_WardrobeInventory = new Inventory( new com.Utils.ID32(_global.Enums.InvType.e_Type_GC_StaticInventory, clientCharacterID.GetInstance()) );
+		for ( var i:Number = 0 ; i < m_WardrobeInventory.GetMaxItems() ; ++i ) {
+			var invItem:InventoryItem = m_WardrobeInventory.GetItemAt(i);
+			if ( invItem.m_Name == clothName) {
+				return 1;
+			}
+		}
+		
+		return 0;
+	}
+	
 	public function getClothingSetList():Array {
 		var returnArray:Array = [];
 		
@@ -415,6 +456,15 @@ class com.thesecretworld.chronicle.Gongju.ClothingDeckManagerImpl {
         	m_EquippedInventory.SignalItemRemoved.Connect( onEquippedChange, this );
 		}
 	}
+	
+	public function PreviewAllFromTarget(){
+		Chat.SignalShowFIFOMessage.Emit("DEBUG: PreviewAllFromTarget", 0);
+		
+		var characterID:ID32 = m_CurrentDefensiveTarget;
+		var targetInventory:Inventory = new Inventory(new com.Utils.ID32(_global.Enums.InvType.e_Type_GC_WearInventory, characterID.GetInstance()));
+		var previewOK:Boolean = targetInventory.PreviewCharacter(m_CurrentDefensiveTarget);
+		//m_PreviewAllButton.disabled = !previewOK;
+    }
 	
 	public function onWardrobeChange() {
 		m_WardrobeChanged = true;

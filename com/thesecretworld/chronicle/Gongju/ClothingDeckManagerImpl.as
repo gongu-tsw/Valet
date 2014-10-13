@@ -493,6 +493,94 @@ class com.thesecretworld.chronicle.Gongju.ClothingDeckManagerImpl {
     	
 	}
 	
+	public function exportAllDecks():String
+	{
+		var export = "VALET_EXPORT;0.5%HEAD%"
+		for (var idx:Number = 0; idx < m_ClothingDeckArray.length; ++idx) {
+			var deck:ClothingDeck = m_ClothingDeckArray[idx];
+			
+			if (idx != 0)
+				export = export + "%O%";
+				
+			export = export + deckExportString(deck);
+		}
+		return export;
+	}
+	
+	public function exportSelectedDeck(itemName:String):String
+	{
+		var export = "VALET_EXPORT;0.5%HEAD%"
+		for (var idx:Number = 0; idx < m_ClothingDeckArray.length; ++idx) {
+			var deck:ClothingDeck = m_ClothingDeckArray[idx];
+			var deckName = deck.getName();
+			if ( itemName == deckName ) {
+				
+				export = export + deckExportString(deck);
+				
+				break;
+			}
+		}
+		return export;
+	}
+	
+	public function deckExportString(deck:ClothingDeck):String
+	{
+		return deck.getName() + "|" + deck.getFeet() + "|" + deck.getLeg() + "|" +
+			deck.getChest() + "|" + deck.getBack() + "|" + deck.getHands() + "|" + deck.getNeck() + "|" +
+			deck.getHats() + "|" + deck.getHeadgear1() + "|" + deck.getHeadgear2() + "|" +
+			deck.getMultislot() + "|false|undefined" ;"|false|undefined" ;
+	}
+	
+	public function importDecks(importString:String)
+	{
+		var headIdx:Number = importString.indexOf("%HEAD%");
+		if (headIdx != -1) {
+			var charName = Character.GetClientCharacter().GetName();
+			var header:String = importString.substring(0,headIdx);
+			// should be compatible with fashionista 2.1 VFA_EXPORT;2.1
+			importString = importString.substring(headIdx + 6);
+			var outfits:Array = importString.split('%0%');
+			var nbOutfits = outfits.length;
+			for (var idx:Number = 0; idx < nbOutfits; idx++) {
+				var outfitString:String = outfits[idx];
+				var singleOutfitArray = outfitString.split("|");
+				var name:String = singleOutfitArray[0];
+				
+				var found:Boolean = false;
+				for (var clothingDeckIdx:Number = 0; clothingDeckIdx < m_ClothingDeckArray.length; ++clothingDeckIdx) {
+					var deck:ClothingDeck = m_ClothingDeckArray[clothingDeckIdx];
+					var deckName = deck.getName();
+					if ( name == deckName ) {
+						found = true;
+						break;
+					}
+				}
+				if (found) {
+					// make some warning about not imported outfit
+					continue;
+				}
+				
+				var headgear1:String = singleOutfitArray[8];
+				var headgear2:String = singleOutfitArray[9];
+				var hats:String = singleOutfitArray[7];
+				var neck:String = singleOutfitArray[6];
+				var chest:String = singleOutfitArray[3];
+				var back:String = singleOutfitArray[4];
+				var hands:String = singleOutfitArray[5];
+				var leg:String = singleOutfitArray[2];
+				var feet:String = singleOutfitArray[1];
+				var multislot:String = singleOutfitArray[10];
+				var favorite:String = singleOutfitArray[11]; // unused
+				var outfitId:String = singleOutfitArray[12]; // unused
+				
+				// TODO name already exist ?
+				// if yes, what ?
+				var newClothingDeck:ClothingDeck = new ClothingDeck(charName, name, headgear1, headgear2, hats, neck, chest, back, hands, leg, feet, multislot);
+			}
+		}
+	}
+	
+	
 	public function serializeAllDeck():Array
 	{
 		var serializedDeckArray:Array = [];

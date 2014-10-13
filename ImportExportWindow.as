@@ -99,15 +99,17 @@ class ImportExportWindow extends MovieClip {
 	
 	//
 	private function ExportAll(event:Object) {
-		
+		m_CodeEntryBox.text = m_ClothingDeckManagerImpl.exportAllDecks();
 	}
 	
 	private function ExportSelection(event:Object) {
-		
+		var deckName:String = m_ParentWindow.getNameOfSelectedDeck();
+		if (deckName != null)
+			m_CodeEntryBox.text = m_ClothingDeckManagerImpl.exportSelectedDeck(deckName);
 	}
 	
 	private function Import(event:Object) {
-		
+		m_ClothingDeckManagerImpl.importDecks(m_CodeEntryBox.text);
 	}
 	
 	//Misc

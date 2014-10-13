@@ -671,6 +671,15 @@ class ValetWindow extends MovieClip {
 		return true;
 	}
 	
+	
+	public function getNameOfSelectedDeck():String {
+		if (m_ItemList.selectedIndex != -1) {
+			var setName:String = m_ItemList.dataProvider[m_ItemList.selectedIndex].m_ItemName;
+			return setName;
+		}
+		return null;
+	}
+	
 	// used to set translations
 	// not character dependent
 	// will need update for new translations

@@ -36,7 +36,7 @@ var m_ValetOutfitChangeMonitor:DistributedValue;
 
 // for Integration in 'Topbar Information Overload' by Viper
 var m_VTIOIsLoadedMonitor:DistributedValue;
-var VTIOAddonInfo:String = "Valet|Gongju|0.4.2|Valet_OptionWindowOpen|_root.valet_valet.m_Icon"; 
+var VTIOAddonInfo:String = "Valet|Gongju|0.5|Valet_OptionWindowOpen|_root.valet_valet.m_Icon"; 
 var m_OptionWindowState:DistributedValue;
 
 // to have current defensive target for outfit copy

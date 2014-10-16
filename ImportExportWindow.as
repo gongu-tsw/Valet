@@ -50,7 +50,6 @@ class ImportExportWindow extends MovieClip {
 		super();
 		
 		m_This = this;
-		Chat.SignalShowFIFOMessage.Emit("DEBUG: ImportExportWindow Creation", 0);
 		
 		SignalClosedWindow = new Signal();
 		SignalPositionChanged = new Signal();;
@@ -109,7 +108,9 @@ class ImportExportWindow extends MovieClip {
 	}
 	
 	private function Import(event:Object) {
-		m_ClothingDeckManagerImpl.importDecks(m_CodeEntryBox.text);
+		var someChange:Boolean = m_ClothingDeckManagerImpl.importDecks(m_CodeEntryBox.text);
+		if (someChange)
+			m_ParentWindow.InitList();
 	}
 	
 	//Misc

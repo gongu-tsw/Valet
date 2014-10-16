@@ -37,6 +37,7 @@ class InspectionWindow extends MovieClip {
 	// UI instances
 	private var m_Background:MovieClip
 	private var m_TargetCheckBox:MovieClip;
+	private var m_ColorCheckBox:MovieClip;
 	private var m_CopyButton:MovieClip;
 	private var m_PreviewAllButton:MovieClip;
 	private var m_ClothingDeckManagerImpl:ClothingDeckManagerImpl;
@@ -86,6 +87,8 @@ class InspectionWindow extends MovieClip {
 		m_CopyButton.addEventListener("focusIn", this, "RemoveFocus");
 		m_TargetCheckBox.addEventListener("select", this, "updateDisplay");
 		m_TargetCheckBox.addEventListener("focusIn", this, "RemoveFocus");
+		m_ColorCheckBox.addEventListener("select", this, "updateDisplay");
+		m_ColorCheckBox.addEventListener("focusIn", this, "RemoveFocus");
 		m_PreviewAllButton.addEventListener("click", this, "PreviewAllFromTarget");
 		m_PreviewAllButton.addEventListener("focusIn", this, "RemoveFocus");
 		updateDisplay();
@@ -106,9 +109,8 @@ class InspectionWindow extends MovieClip {
 	}
 	
 	private function updateTextLineInInspectionPanel(clothName:String, lineLabel:Object) {
-		var clothStatus:Number = m_ClothingDeckManagerImpl.getClothStatus(clothName);
-		if (clothName != undefined) {
-			lineLabel.htmlText = clothName;
+		if (m_ColorCheckBox.selected && clothName != undefined) {
+			var clothStatus:Number = m_ClothingDeckManagerImpl.getClothStatus(clothName);
 			//probably a bad way to set the color
 			if (clothStatus == 2) {
 				lineLabel.textColor = 65280; // neon green
@@ -118,7 +120,13 @@ class InspectionWindow extends MovieClip {
 				lineLabel.textColor = 16711680; // red
 			}
 		} else {
-			lineLabel.htmlText = "";
+			lineLabel.textColor = 16777215;
+		}
+		
+		if (clothName != undefined) {
+			lineLabel.text = clothName;
+		} else {
+			lineLabel.text = "";
 		}
 	}
 	

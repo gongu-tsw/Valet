@@ -281,7 +281,6 @@ class ValetWindow extends MovieClip {
 	}
 	
 	private function ShowHideImportExportWindow() {
-		Chat.SignalShowFIFOMessage.Emit("DEBUG: Click ShowHideImportExportWindow", 0);
 		if (m_IsImportExportPanelOpen === true) {
 			m_IsImportExportPanelOpen = false;
 			m_ImportExportPanel.removeMovieClip();
@@ -492,7 +491,6 @@ class ValetWindow extends MovieClip {
 	}
 	
 	public function CopyClothingSet(event:Object) {
-		Chat.SignalShowFIFOMessage.Emit("DEBUG: Call CopyClothingSet", 0);
 		m_Action = ACTION_COPY;
 		ShowConfirmationPanel();
 		

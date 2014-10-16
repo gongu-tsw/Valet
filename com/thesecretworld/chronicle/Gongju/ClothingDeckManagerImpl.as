@@ -1,16 +1,14 @@
-﻿
+﻿// ClothingDeckManagerImpl.as
+import com.GameInterface.Chat;
+import com.GameInterface.DistributedValue;
+import com.GameInterface.Game.Character;
 import com.GameInterface.Inventory;
 import com.GameInterface.InventoryItem;
 
-import com.GameInterface.Chat;
-
-import com.GameInterface.Game.Character;
+import com.Utils.Archive;
+import com.Utils.ID32;
 
 import com.thesecretworld.chronicle.Gongju.ClothingDeck;
-
-import com.Utils.Archive;
-
-import com.Utils.ID32;
 
 class com.thesecretworld.chronicle.Gongju.ClothingDeckManagerImpl {
 
@@ -20,6 +18,7 @@ class com.thesecretworld.chronicle.Gongju.ClothingDeckManagerImpl {
 	private var m_WardrobeChanged:Boolean;
 	private var m_EquippedChanged:Boolean;
 	private var m_ClothingDeckArray:Array;
+	private var m_PublicOutfitList:DistributedValue;
 	
 	static private var m_AllPlacement:Array = [
 		_global.Enums.ItemEquipLocation.e_Wear_Face,
@@ -39,6 +38,19 @@ class com.thesecretworld.chronicle.Gongju.ClothingDeckManagerImpl {
 		m_EquippedChanged = true;
 		// clothing deck list loading done externaly for now
 		m_ClothingDeckArray = new Array();
+		m_PublicOutfitList = DistributedValue.Create("Valet_OutfitList");
+	}
+	
+	public function updatePublicOutfitList() {
+		var publicOutfitList:String = "";
+		for (var idx:Number = 0; idx < m_ClothingDeckArray.length; ++idx) {
+			var deck:ClothingDeck = m_ClothingDeckArray[idx];
+			if (idx == 0)
+				publicOutfitList = deck.getName();
+			else
+				publicOutfitList = publicOutfitList + "|" + deck.getName();
+		}
+		DistributedValue.SetDValue("Valet_OutfitList", publicOutfitList);
 	}
 	
 	public function addClothingSet(name:String):String {
@@ -56,7 +68,6 @@ class com.thesecretworld.chronicle.Gongju.ClothingDeckManagerImpl {
 		}
 
 		addOrUpdateClothingSet(name, true);
-    	
     	return undefined;
 	}
 	
@@ -209,6 +220,7 @@ class com.thesecretworld.chronicle.Gongju.ClothingDeckManagerImpl {
 		if (add) {
 			var newClothingDeck = createClothingDeckFromTarget(currentInventory, null, name);
     		m_ClothingDeckArray.push(newClothingDeck);
+			updatePublicOutfitList();
 		} else {
 			// name existence already checked
 			for (var idx:Number = 0; idx < m_ClothingDeckArray.length; ++idx) {
@@ -226,6 +238,7 @@ class com.thesecretworld.chronicle.Gongju.ClothingDeckManagerImpl {
 			var deck:ClothingDeck = m_ClothingDeckArray[idx];
 			if (deck.getName() == name) {
 				m_ClothingDeckArray.splice(idx, 1);
+				updatePublicOutfitList();
 				break;
 			}
 		}
@@ -350,6 +363,7 @@ class com.thesecretworld.chronicle.Gongju.ClothingDeckManagerImpl {
 				if (idx != 0) {
 					var toMove:Array = m_ClothingDeckArray.splice(idx,1);
 					m_ClothingDeckArray.unshift(toMove[0]);
+					updatePublicOutfitList();
 				}
 				break;
 			}
@@ -364,6 +378,7 @@ class com.thesecretworld.chronicle.Gongju.ClothingDeckManagerImpl {
 				if (idx != 0) {
 					var toMove:Array = m_ClothingDeckArray.splice(idx,1);
 					m_ClothingDeckArray.splice(idx - 1, 0, toMove[0]);
+					updatePublicOutfitList();
 				}
 				break;
 			}
@@ -378,6 +393,7 @@ class com.thesecretworld.chronicle.Gongju.ClothingDeckManagerImpl {
 				if (idx != m_ClothingDeckArray.length - 1) {
 					var toMove:Array = m_ClothingDeckArray.splice(idx,1);
 					m_ClothingDeckArray.push(toMove[0]);
+					updatePublicOutfitList();
 				}
 				break;
 			}
@@ -392,6 +408,7 @@ class com.thesecretworld.chronicle.Gongju.ClothingDeckManagerImpl {
 				if (idx != m_ClothingDeckArray.length - 1) {
 					var toMove:Array = m_ClothingDeckArray.splice(idx,1);
 					m_ClothingDeckArray.splice(idx + 1, 0, toMove[0]);
+					updatePublicOutfitList();
 				}
 				break;
 			}
@@ -405,7 +422,7 @@ class com.thesecretworld.chronicle.Gongju.ClothingDeckManagerImpl {
 		for ( var i:Number = 0 ; i < m_EquippedInventory.GetMaxItems() ; ++i ) {
 			var invItem:InventoryItem = m_EquippedInventory.GetItemAt(i);
 			if ( invItem.m_Name == clothName) {
-				return 2;
+				return 2; // currently wearing it
 			}
 		}
 		
@@ -413,11 +430,11 @@ class com.thesecretworld.chronicle.Gongju.ClothingDeckManagerImpl {
 		for ( var i:Number = 0 ; i < m_WardrobeInventory.GetMaxItems() ; ++i ) {
 			var invItem:InventoryItem = m_WardrobeInventory.GetItemAt(i);
 			if ( invItem.m_Name == clothName) {
-				return 1;
+				return 1; // you have it in wardrobe
 			}
 		}
 		
-		return 0;
+		return 0; // you don't have it
 	}
 	
 	public function getClothingSetList():Array {
@@ -514,9 +531,7 @@ class com.thesecretworld.chronicle.Gongju.ClothingDeckManagerImpl {
 			var deck:ClothingDeck = m_ClothingDeckArray[idx];
 			var deckName = deck.getName();
 			if ( itemName == deckName ) {
-				
 				export = export + deckExportString(deck);
-				
 				break;
 			}
 		}
@@ -534,7 +549,9 @@ class com.thesecretworld.chronicle.Gongju.ClothingDeckManagerImpl {
 	public function importDecks(importString:String)
 	{
 		var headIdx:Number = importString.indexOf("%HEAD%");
+		var someChange = false;
 		if (headIdx != -1) {
+			Chat.SignalShowFIFOMessage.Emit("Head found", 0);
 			var charName = Character.GetClientCharacter().GetName();
 			var header:String = importString.substring(0,headIdx);
 			// should be compatible with fashionista 2.1 VFA_EXPORT;2.1
@@ -555,31 +572,35 @@ class com.thesecretworld.chronicle.Gongju.ClothingDeckManagerImpl {
 						break;
 					}
 				}
+				// TODO name already exist ?
+				// if yes, what ?
 				if (found) {
 					// make some warning about not imported outfit
 					continue;
 				}
 				
-				var headgear1:String = singleOutfitArray[8];
-				var headgear2:String = singleOutfitArray[9];
-				var hats:String = singleOutfitArray[7];
-				var neck:String = singleOutfitArray[6];
-				var chest:String = singleOutfitArray[3];
-				var back:String = singleOutfitArray[4];
-				var hands:String = singleOutfitArray[5];
-				var leg:String = singleOutfitArray[2];
-				var feet:String = singleOutfitArray[1];
-				var multislot:String = singleOutfitArray[10];
-				var favorite:String = singleOutfitArray[11]; // unused
-				var outfitId:String = singleOutfitArray[12]; // unused
+				var headgear1:String = singleOutfitArray[8] == "undefined" ? undefined : singleOutfitArray[8];
+				var headgear2:String = singleOutfitArray[9] == "undefined" ? undefined : singleOutfitArray[9];
+				var hats:String = singleOutfitArray[7] == "undefined" ? undefined : singleOutfitArray[7];
+				var neck:String = singleOutfitArray[6] == "undefined" ? undefined : singleOutfitArray[6];
+				var chest:String = singleOutfitArray[3] == "undefined" ? undefined : singleOutfitArray[3];
+				var back:String = singleOutfitArray[4] == "undefined" ? undefined : singleOutfitArray[4];
+				var hands:String = singleOutfitArray[5] == "undefined" ? undefined : singleOutfitArray[5];
+				var leg:String = singleOutfitArray[2] == "undefined" ? undefined : singleOutfitArray[2];
+				var feet:String = singleOutfitArray[1] == "undefined" ? undefined : singleOutfitArray[1];
+				var multislot:String = singleOutfitArray[10] == "undefined" ? undefined : singleOutfitArray[10];
+				var favorite:String = singleOutfitArray[11] == "undefined" ? undefined : singleOutfitArray[11]; // unused
+				var outfitId:String = singleOutfitArray[12] == "undefined" ? undefined : singleOutfitArray[12]; // unused
 				
-				// TODO name already exist ?
-				// if yes, what ?
 				var newClothingDeck:ClothingDeck = new ClothingDeck(charName, name, headgear1, headgear2, hats, neck, chest, back, hands, leg, feet, multislot);
+				m_ClothingDeckArray.push(newClothingDeck);
+				someChange = true;
 			}
 		}
+		if (someChange)
+			updatePublicOutfitList();
+		return someChange;
 	}
-	
 	
 	public function serializeAllDeck():Array
 	{
